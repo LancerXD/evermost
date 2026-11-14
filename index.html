@@ -61,6 +61,9 @@ const PAGINA = {
   yo: ['1. umm my name is lestav kaneida', '2. i go by ? / ?', "3. i'm half mexican???", "4. i'm turning 22 and my birthday is in march!"],
   gato: 'https://files.strawcdn.com/straw/kWjusFpSYqruZJUVhxrS.jpg',
   escondido: 'https://files.strawcdn.com/straw/XKBfzMalbqkOhMXrmgXX.png',   // lo que se esconde (BUSCAME!)
+  // memes (carpeta memes/): se acomodan al azar cada vez que se abre la página
+  memes: ['pato_gobierno', 'chihuahua', 'conejo', 'gato_calajo', 'perro_parado', 'pitbull', 'tlabaja',
+          'gato_explosion', 'pug', 'perro_pregunta', 'perro_sombrero', 'gato_like'].map(n => 'memes/' + n + '.jpg'),
 };
 </script>
 <style>
@@ -110,7 +113,11 @@ const PAGINA = {
 
   /* ---------- columnas */
   .columnas { display: grid; grid-template-columns: 290px 1fr 270px; gap: 26px; margin-top: 26px; align-items: start; }
-  @media (max-width: 900px) { .columnas { grid-template-columns: 1fr; } header { grid-template-columns: 1fr; } header .lado { display: none; } }
+  @media (max-width: 900px) {
+    .columnas { grid-template-columns: 1fr; } header { grid-template-columns: 1fr; } header .lado { display: none; }
+    .columnas main { order: -1; }                       /* en el celular: las actualizaciones primero */
+    .polaroid { max-width: 260px; margin-left: auto; margin-right: auto; }
+  }
   .hoja { padding: 18px 20px; margin-bottom: 26px; }
   .hoja h2 { font-size: 28px; margin: 0 0 6px; color: var(--tinta); }
   .hoja p { margin: .45em 0; }
@@ -140,6 +147,9 @@ const PAGINA = {
 
   .polaroid { padding: 10px 10px 34px; --fondo: #fff; transform: rotate(-3deg); margin-bottom: 26px; }
   .polaroid img { width: 100%; display: block; }
+  .meme { max-width: 210px; margin: 0 auto 30px; }
+  .meme.d { transform: rotate(4deg); } .meme.i { transform: rotate(-5deg); }
+  main .meme { margin: -10px 0 30px auto; } main .meme.i { margin: -10px auto 30px 0; }
   .polaroid span { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 18px; color: var(--tintaSuave); }
 
   /* BUSCAME! */
@@ -185,12 +195,14 @@ const PAGINA = {
         <h2>Ideas?</h2>
         <div id="ideas"></div>
       </div>
+      <div id="memesIzq"></div>
     </aside>
 
     <main>
       <h2 class="titulo-col">Development Updates</h2>
       <div class="hoja nota rosa crayon" style="margin-bottom:34px"><p id="sobre"></p></div>
       <div id="actualizaciones"></div>
+    </aside_fin_hack>
     </main>
 
     <aside>
@@ -200,6 +212,7 @@ const PAGINA = {
           <path d="M58 40 L 72 52 L 56 62" fill="none" stroke="#f5d640" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div class="hoja cuaderno crayon"><div class="cinta"></div><div id="yo"></div></div>
+      <div id="memesDer"></div>
     </aside>
   </div>
 
@@ -220,14 +233,19 @@ $('sobre').textContent = PAGINA.sobre;
 $('ideas').innerHTML = PAGINA.ideas.map(t => `<p>${esc(t)}</p>`).join('');
 $('yo').innerHTML = PAGINA.yo.map(t => `<p>${esc(t)}</p>`).join('');
 $('gato').src = PAGINA.gato;
-$('actualizaciones').innerHTML = ACTUALIZACIONES.map(a => `
+// memes revueltos: uno después de cada actualización y los demás a los lados
+const memes = PAGINA.memes.slice().sort(() => Math.random() - .5);
+const polaroid = (u, i) => `<div class="polaroid meme crayon ${i % 2 ? 'd' : 'i'}"><div class="cinta"></div><img src="${u}" loading="lazy" alt=""></div>`;
+const enMedio = memes.splice(0, ACTUALIZACIONES.length);
+memes.forEach((u, i) => $(i % 2 ? 'memesDer' : 'memesIzq').insertAdjacentHTML('beforeend', polaroid(u, i)));
+$('actualizaciones').innerHTML = ACTUALIZACIONES.map((a, n) => `
   <article class="actualizacion hoja cuaderno crayon">
     <div class="cinta"></div>
     ${a.fecha ? `<div class="fecha">${esc(a.fecha)}</div>` : ''}
     <h2>${esc(a.titulo)}</h2>
     ${a.texto.map(t => `<p>${conNegritas(t)}</p>`).join('')}
     ${a.imagenes && a.imagenes.length ? `<div class="fotos">${a.imagenes.map(u => `<div class="foto crayon"><img src="${u}" loading="lazy" alt=""></div>`).join('')}</div>` : ''}
-  </article>`).join('');
+  </article>${enMedio[n] ? polaroid(enMedio[n], n) : ''}`).join('');
 
 // ---------- ver una imagen en grande
 document.addEventListener('click', e => {
